@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Web;
 
 namespace AspMvcResearchGate.Models
 {
@@ -79,6 +80,11 @@ namespace AspMvcResearchGate.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+        
+        [Required(ErrorMessage ="Profile Picture is required")]
+        [DataType(DataType.Upload)]
+        [Display(Name ="Profile Picture")]
+        public HttpPostedFileBase ProfilePicture { get; set; }
     }
 
     public class ResetPasswordViewModel

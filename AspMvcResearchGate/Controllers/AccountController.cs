@@ -9,6 +9,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using AspMvcResearchGate.Models;
+using System.IO;
 
 namespace AspMvcResearchGate.Controllers
 {
@@ -151,6 +152,7 @@ namespace AspMvcResearchGate.Controllers
         {
             if (ModelState.IsValid)
             {
+                string uploadedPicture = await UploadFile(model.ProfilePicture);
                 var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
@@ -165,6 +167,7 @@ namespace AspMvcResearchGate.Controllers
 
                     return RedirectToAction("Index", "Home");
                 }
+                await DeleteFile(uploadedPicture);
                 AddErrors(result);
             }
 
@@ -172,6 +175,34 @@ namespace AspMvcResearchGate.Controllers
             return View(model);
         }
 
+        private async Task<string> UploadFile(HttpPostedFileBase file)
+        {
+            if (!Directory.Exists(Server.MapPath("~/Images")))
+            {
+                Directory.CreateDirectory(Server.MapPath("~/Images"));
+            }
+            string fileName = Path.GetFileNameWithoutExtension(file.FileName);
+            string ext = Path.GetExtension(file.FileName);
+            fileName = fileName + DateTime.Now.ToString("yymmssfff") + ext;
+
+            string path = Path.Combine(Server.MapPath("~/Images"), fileName);
+
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                await  file.InputStream.CopyToAsync(stream);
+            }
+
+            return fileName;
+        }
+
+        private async Task DeleteFile(string filePath)
+        {
+            string path = Path.Combine(Server.MapPath("~/Images"), filePath);
+            if (System.IO.File.Exists(path))
+            {
+               await Task.Run(() => System.IO.File.Delete(path));
+            }
+        }
         //
         // GET: /Account/ConfirmEmail
         [AllowAnonymous]
